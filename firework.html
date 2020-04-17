@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    /* 样式结构 */
+    #container {
+      width: 80%;
+      height: 700px;
+      border: 2px solid red;
+      background: #000;
+      margin: 20px auto;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .fire {
+      width: 10px;
+      height: 10px;
+      position: absolute;
+      bottom: 0;
+    }
+    .small-fire {
+      width: 10px;
+      height: 10px;
+      position: absolute;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+</body>
+<script src="move.js"></script>
+<script>
+  // OOA:烟花:点击大框，创建烟花对象
+          // 1.创建烟花元素
+          // 2.设置默认信息
+          // 3.立即运动，到鼠标位置
+          // 4.到目标点后消失，同时创建一堆小烟花
+          // 5.设置默认信息
+          // 6.开始运动，终点，消失
+  // OOD:
+    function Fire(ele,pos) {
+      this.x = pos.x;
+      this.y = pos.y
+      this.cont = ele;
+      // 创建烟花元素
+      this.createFire();
+    }
+    Fire.prototype.createFire = function() {
+      // 创建并设置信息
+      this.f = document.createElement("div");
+      this.f.className = "fire";
+      this.f.style.left = this.x + "px";
+      this.f.style.background = randomColor();
+      this.cont.appendChild(this.f);
+      // 立即运动
+      this.fireMove();
+    }
+    Fire.prototype.fireMove =function() {
+      // 运动
+      move(this.f,{top:this.y},() => {
+        // 到目标点后消失，同时创建一堆小烟花
+        this.f.remove();
+        this.createSmall();
+      });  
+    }
+    Fire.prototype.createSmall = function() {
+      // 创建并设置
+      // 随机个数
+      this.num = random(10,20);
+      // 圆周1: 增加半径
+      this.r = random(100,200);
+      // 查看个数
+      console.log(this.num);
+      // 根据个数创建对应的元素
+      for(var i=0;i<this.num;i++) {
+        /*因为for循环在重复执行，每次执行都会创建一个元素
+        等动画结束后，for循环已经执行结束，只保存下来一个元素
+        需要配合ES6的let触发块级作用域，将每次for循环创建的div，
+        都保存在运动的回调函数中，等运动结束后，回调函数才能找到、
+        每次的div，也就是每个小烟花*/
+        let div = document.createElement("div");
+        div.className = "small-fire";
+        div.style.background = randomColor();
+        div.style.left = this.x + "px";
+        div.style.top = this.y + "px";
+        // 编一个没有参与程序的号，用来方便查看
+        div.setAttribute("i",i);
+        // 插入节点
+        this.cont.appendChild(div);
+        // 圆周2: 计算目标
+        var randomPos = {
+          x:Math.round(Math.cos(Math.PI / 180 * (360/this.num * i)) * this.r) + this.x,
+          y:Math.round(Math.sin(Math.PI / 180 * (360/this.num * i)) * this.r) + this.y
+        }
+        move(div,{
+          left:randomPos.x,
+          top:randomPos.y
+        },function() {
+          div.remove();
+        })
+      }
+    }
+
+    // 随机数
+    function random(a,b) {
+      return Math.round(Math.random()*(a-b)+b)
+    }
+    // 随机颜色
+    function randomColor() {
+      return `rgb(${random(0,255)},${random(0,255)},${random(0,255)})`
+    }
+
+    var ocont = document.getElementById("container");
+
+    ocont.onclick = function(eve) {
+      var e = eve || window.event;
+      var pos = {
+        x:e.offsetX,
+        y:e.offsetY
+      }
+      new Fire(this,pos);
+    }
+</script>
+</html>
